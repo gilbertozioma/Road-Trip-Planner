@@ -29,7 +29,7 @@
                 @endif
             </div>
         </div>
-        @if ($destination->count() < 0)
+        @if ($hasMultipleDestinations)
             <div class="card mt-3">
                 <div class="card-header">{{ __('Journey Summary') }}</div>
                 <div class="card-body">
@@ -41,7 +41,7 @@
             <div class="card mt-3">
                 <div class="card-header">{{ __('Journey Summary') }}</div>
                 <div class="card-body">
-                    <p class="text-center">Please add more than 1 destination to calculate summary.</p>
+                    <p class="text-center">Please add more than 1 destination to calculate the summary.</p>
                 </div>
             </div>
         @endif
@@ -49,7 +49,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">{{ trans('destination.location') }}</div>
-            @if ($destination->coordinate)
+            @if ($userDestinations->count())
             <div class="card-body" id="mapid"></div>
             @else
             <div class="card-body">{{ __('destination.no_coordinate') }}</div>
@@ -61,7 +61,6 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"/>
-
 <style>
     #mapid { height: 400px; }
 </style>
@@ -86,7 +85,11 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    L.marker([{{ $destination->latitude }}, {{ $destination->longitude }}]).addTo(map)
-        .bindPopup('{!! $destination->map_popup_content !!}');
+    @foreach($userDestinations as $dest)
+        L.marker([{{ $dest->latitude }}, {{ $dest->longitude }}]).addTo(map)
+            .bindPopup("<b>Name: {{ $dest->name }}<br />Address: {{ $dest->address }}<br /><br />" +
+            "Latitude: {{ $dest->latitude }}<br />Longitude: {{ $dest->longitude }}<br /><br />" +
+            "Total Distance: {{ $summary['totalDistance'] ?? 'N/A' }} km<br />Total Time: {{ $summary['totalTime'] ?? 'N/A' }} minutes.");
+    @endforeach
 </script>
 @endpush

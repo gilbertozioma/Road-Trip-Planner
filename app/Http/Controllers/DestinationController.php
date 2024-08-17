@@ -20,13 +20,10 @@ class DestinationController extends Controller
     {
         // $this->authorize('manage_destination');
 
-        $destinationQuery = Destination::query();
-        $destinationQuery->orderBy('created_at', 'desc');
-        $destinationQuery->where('name', 'like', '%' . request('q') . '%');
-        $destinationQuery->where('creator_id', Auth::id());
-
-        // Paginate the destinations for display
-        $destinations = $destinationQuery->paginate(25);
+        $destinations = Destination::where('creator_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->where('name', 'like', '%' . request('q') . '%')
+            ->paginate(25);
 
         return view('destinations.index', compact('destinations'));
     }
@@ -71,17 +68,20 @@ class DestinationController extends Controller
     /**
      * Display the specified destination.
      *
-     * @param  \App\Destination $destination
+     * @param  int $id
      * @return \Illuminate\View\View
      */
-    public function show(Destination $destination)
-    {
-        // Get the destinations for summary calculation
-        $destinationsForSummary = $destination->all();
-        $summary = $this->calculateSummary($destinationsForSummary);
-        return view('destinations.show', compact('destination', 'summary'));
-    }
-    
+    public function show(int $id)
+{
+    $destination = Destination::where('creator_id', Auth::id())->findOrFail($id);
+    $this->authorize('view', $destination);
+    $userDestinations = Destination::where('creator_id', Auth::id())->get();
+    $hasMultipleDestinations = $userDestinations->count() > 1;
+    $summary = $hasMultipleDestinations ? $this->calculateSummary($userDestinations) : null;
+
+    return view('destinations.show', compact('destination', 'userDestinations', 'summary', 'hasMultipleDestinations'));
+}
+
     /**
      * Calculate the distance between two points using the Haversine formula.
      * 
@@ -204,9 +204,7 @@ class DestinationController extends Controller
     {
         $this->authorize('delete', $destination);
 
-        $request->validate(['destination_id' => 'required']);
-
-        if ($request->get('destination_id') == $destination->id && $destination->delete()) {
+        if ($destination->delete()) {
             return redirect()->route('destinations.index');
         }
 

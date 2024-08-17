@@ -28,7 +28,7 @@
                     @endif
                 </div>
             </div>
-            @if ($lastDestination->count() < 0)
+            @if ($hasMultipleDestinations)
                 <div class="card mt-3">
                     <div class="card-header">{{ __('Journey Summary') }}</div>
                     <div class="card-body">
@@ -40,7 +40,7 @@
                 <div class="card mt-3">
                     <div class="card-header">{{ __('Journey Summary') }}</div>
                     <div class="card-body">
-                        <p class="text-center">Please add more than 1 destination to calculate summary.</p>
+                        <p class="text-center">Please add more than 1 destination to calculate the summary.</p>
                     </div>
                 </div>
             @endif
